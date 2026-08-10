@@ -53,7 +53,7 @@ async function menu(db) {
 async function handleCreateProduct(db) {
     console.log('\n======> REGISTRAR PRODUCTO <======');
     const name = await rl.question('Nombre del producto: ');
-    const category = await rl.question('Categoría (periferico, consola, laptop, audio, streaming): ');
+    const category = await rl.question('Categoría (perifericos, laptops, componentes, monitores, audio, streaming): ');
     const brand = await rl.question('Marca: ');
     const stock = await rl.question('Stock inicial: ');
     const price = await rl.question('Precio: ');
@@ -72,8 +72,15 @@ async function handleCreateProduct(db) {
         tags
     });
 
-    console.log('--> Producto registrado con éxito:');
-    console.table([product]);
+    console.log('\nProducto registrado con éxito');
+    console.log(`Nombre: ${product.name}`);
+    console.log(`Categoría: ${product.category}`);
+    console.log(`Marca: ${product.brand}`);
+    console.log(`Stock: ${product.stock}`);
+    console.log(`Precio: $${Number(product.price).toFixed(2)}`);
+    console.log(`Estado: ${product.status}`);
+    console.log(`Tags: ${product.tags.join(', ')}`);
+
     await menu(db);
 }
 
@@ -84,12 +91,11 @@ async function handleListAll(db) {
         console.log('--> No hay productos registrados.');
     } else {
         console.table(products.map(p => ({
-            ID: p._id.toString(),
             Nombre: p.name,
             Categoría: p.category,
-            Marca: p.brand,
+            Marca: p.brand || 'N/A',
             Stock: p.stock,
-            Precio: `$${p.price}`,
+            Precio: `$${Number(p.price).toFixed(2)}`,
             Estado: p.status
         })));
     }
@@ -110,11 +116,11 @@ async function handleFilterProducts(db) {
         console.log('--> No se encontraron productos con los filtros especificados.');
     } else {
         console.table(products.map(p => ({
-            ID: p._id.toString(),
             Nombre: p.name,
             Categoría: p.category,
+            Marca: p.brand || 'N/A',
             Stock: p.stock,
-            Precio: `$${p.price}`,
+            Precio: `$${Number(p.price).toFixed(2)}`,
             Estado: p.status
         })));
     }
@@ -125,8 +131,18 @@ async function handleFindById(db) {
     console.log('\n======> BUSCAR POR ID <======');
     const id = await rl.question('ID del producto: ');
     const product = await findProductById(db, id);
-    console.log('--> Producto encontrado:');
-    console.table([product]);
+
+    console.log('\n--> Producto encontrado:');
+    console.log(`Nombre: ${product.name}`);
+    console.log(`Categoría: ${product.category}`);
+    console.log(`Marca: ${product.brand || 'N/A'}`);
+    console.log(`Stock: ${product.stock}`);
+    console.log(`Precio: $${Number(product.price).toFixed(2)}`);
+    console.log(`Estado: ${product.status}`);
+    if (product.tags && product.tags.length > 0) {
+        console.log(`Tags: ${product.tags.join(', ')}`);
+    }
+
     await menu(db);
 }
 
@@ -141,8 +157,12 @@ async function handleUpdateProduct(db) {
     if (priceStr.trim()) updateData.price = priceStr.trim();
 
     const updated = await updateProduct(db, id, updateData);
-    console.log('--> Producto actualizado correctamente:');
-    console.table([{ ID: updated._id.toString(), Nombre: updated.name, Stock: updated.stock, Precio: `$${updated.price}` }]);
+
+    console.log('\nProducto actualizado correctamente');
+    console.log(`Nombre: ${updated.name}`);
+    console.log(`Stock: ${updated.stock}`);
+    console.log(`Precio: $${Number(updated.price).toFixed(2)}`);
+
     await menu(db);
 }
 
@@ -150,8 +170,11 @@ async function handleDeactivateProduct(db) {
     console.log('\n======> DESACTIVAR PRODUCTO (BORRADO LÓGICO) <======');
     const id = await rl.question('ID del producto a desactivar: ');
     const deactivated = await deactivateProduct(db, id);
-    console.log('--> Producto desactivado correctamente:');
-    console.table([{ ID: deactivated._id.toString(), Nombre: deactivated.name, Estado: deactivated.status }]);
+
+    console.log('\nProducto desactivado correctamente');
+    console.log(`Nombre: ${deactivated.name}`);
+    console.log(`Estado: ${deactivated.status}`);
+
     await menu(db);
 }
 

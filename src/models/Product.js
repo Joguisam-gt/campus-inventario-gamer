@@ -1,5 +1,5 @@
 // Categorias permitidas en la aplicacion 
-export const ALLOWED_CATEGORIES = ['laptos', 'componentes', 'perifericos', 'monitores'];
+export const ALLOWED_CATEGORIES = ['laptops', 'componentes', 'perifericos', 'monitores', 'audio', 'streaming'];
 
 // Funcion constructora para estandarizar la creacion de documentos Products
 export const createProductDocument = ({ name, category, price, stock = 0, isActive = true }) => {
@@ -12,12 +12,11 @@ export const createProductDocument = ({ name, category, price, stock = 0, isActi
         stock: Number(stock),
         isActive: Boolean(isActive),
         createdAt: now,
-        updateAt: now,
+        updatedAt: now,
     };
 };
 
 // Esquema JSON Schema para validacion nativa dentro de MongoDB
-
 export const productoCollectionSchema = {
     $jsonSchema: {
         bsonType: 'object',
@@ -53,4 +52,4 @@ export const productoCollectionSchema = {
             },
         },
     }
-}
+};
