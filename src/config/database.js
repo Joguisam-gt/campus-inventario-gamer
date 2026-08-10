@@ -1,6 +1,8 @@
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/inventario-gamer';
+const DEFAULT_URI = 'mongodb://127.0.0.1:27018/inventario-gamer?directConnection=true';
+const uri = process.env.MONGODB_URI || DEFAULT_URI;
+
 let dbInstance = null;
 let clientInstance = null;
 
