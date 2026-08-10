@@ -5,7 +5,7 @@ const COLLECTION_NAME = process.env.COLLECTION_NAME || 'products';
 const initialProducts = [
     {
         name: 'Teclado mecánico RedSwitch',
-        category: 'periferico',
+        category: 'perifericos',
         brand: 'HyperX',
         stock: 12,
         price: 475.50,
@@ -16,7 +16,7 @@ const initialProducts = [
     },
     {
         name: 'Mouse Gamer Logitech G502',
-        category: 'periferico',
+        category: 'perifericos',
         brand: 'Logitech',
         stock: 15,
         price: 350.00,
@@ -27,7 +27,7 @@ const initialProducts = [
     },
     {
         name: 'Laptop Gamer Legion 5 Pro',
-        category: 'laptop',
+        category: 'laptops',
         brand: 'Lenovo',
         stock: 5,
         price: 8500.00,
