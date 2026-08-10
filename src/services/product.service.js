@@ -1,32 +1,65 @@
-import { Product } from '../models/Product.js';
-import { validateProductInput } from '../utils/validators.js';
+import { ObjectId } from 'mongodb';
 
-export class ProductService {
-    static async getAllProducts(filter = {}) {
-        return await Product.find(filter);
+export const createProduct = async (db, productData) => {
+    const document = {
+        name: productData.name ? productData.name.trim() : '',
+        category: productData.category,
+        brand: productData.brand,
+        stock: Number(productData.stock) || 0,
+        price: Number(productData.price) || 0,
+        status: productData.status || 'available',
+        tags: Array.isArray(productData.tags) ? productData.tags : [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+
+    const result = await db.collection('products').insertOne(document);
+    return { _id: result.insertedId, ...document };
+};
+
+export const listProducts = async (db, filters = {}) => {
+    return await db.collection('products').find(filters).toArray();
+};
+
+export const findProductById = async (db, id) => {
+    const product = await db.collection('products').findOne({ _id: new ObjectId(id) });
+    if (!product) {
+        throw new Error(`No se encontro el producto con ID: ${id}`);
+    }
+    return product;
+};
+
+export const updateProduct = async (db, id, updateData) => {
+    const fieldsToUpdate = { ...updateData, updatedAt: new Date() };
+
+    if (fieldsToUpdate.stock !== undefined) {
+        fieldsToUpdate.stock = Number(fieldsToUpdate.stock);
+    }
+    if (fieldsToUpdate.price !== undefined) {
+        fieldsToUpdate.price = Number(fieldsToUpdate.price);
     }
 
-    static async getProductById(id) {
-        return await Product.findById(id);
-    }
+    const result = await db.collection('products').findOneAndUpdate(
+        { _id: new ObjectId(id) },
+        { $set: fieldsToUpdate },
+        { returnDocument: 'after' }
+    );
 
-    static async createProduct(productData) {
-        const validation = validateProductInput(productData);
-        if (!validation.isValid) {
-            throw new Error(`Validacion fallida: ${validation.errors.join(', ')}`);
-        }
-        return await Product.create(productData);
+    if (!result) {
+        throw new Error(`No se pudo actualizar. Producto no encontrado con ID: ${id}`);
     }
-    static async updateStock(id, newStock) {
-        if (newStock < 0) throw new Error('El stock no puede ser negativo.');
-        return await Product.findByIdAnUpdate(
-            id,
-            { stock: newStock },
-            { new: true, runValidators: true }
-        );
-    }
+    return result;
+};
 
-    static async deleteProduct(id) {
-        return await Product.findByIdAndDelete(id);
+export const deactivateProduct = async (db, id) => {
+    const result = await db.collection('products').findOneAndUpdate(
+        { _id: new ObjectId(id) },
+        { $set: { status: 'inactive', updatedAt: new Date() } },
+        { returnDocument: 'after' }
+    );
+
+    if (!result) {
+        throw new Error(`No se pudo desactivar. Producto no encontrado con ID: ${id}`);
     }
-}
+    return result;
+};
