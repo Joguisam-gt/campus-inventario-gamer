@@ -303,11 +303,6 @@ git push origin feature/nombre-funcionalidad
 
 ## Autor
 
-- *Nombre:* [Nombre completo del estudiante]
-- *Carné:* [Número de carné]
-- *Curso:* [Nombre del curso]
-- *Sección:* [Sección]
-- *Correo:* [Correo electrónico]
 - *GitHub:* [https://github.com/Joguisam-gt](https://github.com/Joguisam-gt)
 
 ## Licencia
