@@ -1,81 +1,105 @@
+// Script de poblamiento: reemplaza el contenido de la coleccion de productos por datos de ejemplo.
+// Uso: npm run seed (pide confirmacion) o node src/seed/seedProducts.js --force (sin confirmacion).
+import 'dotenv/config';
+import * as readline from 'readline/promises';
 import { connectDB, disconnectDB } from '../config/database.js';
+import { createProductDocument, getCollectionName } from '../models/Product.js';
 
-const COLLECTION_NAME = process.env.COLLECTION_NAME || 'products';
-
-const initialProducts = [
+// Datos de ejemplo del inventario inicial.
+const SAMPLE_PRODUCTS = [
     {
         name: 'Teclado mecánico RedSwitch',
         category: 'perifericos',
         brand: 'HyperX',
         stock: 12,
-        price: 475.50,
+        price: 475.5,
         status: 'available',
         tags: ['gamer', 'torneo', 'clase'],
-        createdAt: new Date(),
-        updatedAt: new Date()
     },
     {
         name: 'Mouse Gamer Logitech G502',
         category: 'perifericos',
         brand: 'Logitech',
         stock: 15,
-        price: 350.00,
+        price: 350.0,
         status: 'available',
         tags: ['gamer', 'torneo'],
-        createdAt: new Date(),
-        updatedAt: new Date()
     },
     {
         name: 'Laptop Gamer Legion 5 Pro',
         category: 'laptops',
         brand: 'Lenovo',
         stock: 5,
-        price: 8500.00,
+        price: 8500.0,
         status: 'available',
         tags: ['clase', 'torneo'],
-        createdAt: new Date(),
-        updatedAt: new Date()
     },
     {
         name: 'Audífonos Razer BlackShark V2',
         category: 'audio',
         brand: 'Razer',
         stock: 8,
-        price: 620.00,
+        price: 620.0,
         status: 'loaned',
         tags: ['gamer', 'clase'],
-        createdAt: new Date(),
-        updatedAt: new Date()
     },
     {
         name: 'Kit de Streaming Elgato Stream Deck',
         category: 'streaming',
         brand: 'Elgato',
         stock: 3,
-        price: 1200.00,
+        price: 1200.0,
         status: 'maintenance',
         tags: ['torneo', 'clase'],
-        createdAt: new Date(),
-        updatedAt: new Date()
-    }
+    },
 ];
 
-async function seed() {
+// Pide confirmacion explicita antes de borrar los datos existentes. Solo acepta "si".
+const confirmReset = async (collectionName) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     try {
-        const db = await connectDB();
-        const collection = db.collection(COLLECTION_NAME);
+        const answer = await rl.question(
+            `Esto eliminará todos los documentos de la colección "${collectionName}". Escriba "si" para continuar: `
+        );
+        return answer.trim().toLowerCase() === 'si';
+    } finally {
+        rl.close();
+    }
+};
 
-        await collection.deleteMany({});
-        console.log('[Seed] Colección limpiada con éxito.');
+// Limpia la coleccion e inserta los datos de ejemplo. Devuelve el codigo de salida del proceso.
+const runSeed = async () => {
+    const collectionName = getCollectionName();
+    const forced = process.argv.includes('--force');
 
-        const result = await collection.insertMany(initialProducts);
-        console.log(`[Seed] ${result.insertedCount} productos insertados correctamente.`);
-    } catch (err) {
-        console.error(`[Seed Error]: ${err.message}`);
+    if (!forced && !(await confirmReset(collectionName))) {
+        console.log('[Seed] Operación cancelada. No se modificó la base de datos.');
+        return 0;
+    }
+
+    const db = await connectDB();
+    const collection = db.collection(collectionName);
+
+    const deleted = await collection.deleteMany({});
+    console.log(`[Seed] Colección limpiada: ${deleted.deletedCount} documentos eliminados.`);
+
+    const documents = SAMPLE_PRODUCTS.map((product) => createProductDocument(product));
+    const inserted = await collection.insertMany(documents);
+    console.log(`[Seed] ${inserted.insertedCount} productos insertados correctamente.`);
+    return 0;
+};
+
+// Punto de entrada: ejecuta el seed, cierra la conexion y termina con el codigo de salida correcto.
+const main = async () => {
+    let exitCode = 1;
+    try {
+        exitCode = await runSeed();
+    } catch (error) {
+        console.error(`[Seed Error]: ${error.message}`);
     } finally {
         await disconnectDB();
-        process.exit(0);
     }
-}
+    process.exit(exitCode);
+};
 
-seed();
+main();
