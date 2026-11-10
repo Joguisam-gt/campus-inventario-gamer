@@ -1,55 +1,49 @@
-// Categorias permitidas en la aplicacion 
-export const ALLOWED_CATEGORIES = ['laptops', 'componentes', 'perifericos', 'monitores', 'audio', 'streaming'];
+// Modelo de dominio de Producto: constantes permitidas, valores por defecto y constructor del documento.
 
-// Funcion constructora para estandarizar la creacion de documentos Products
-export const createProductDocument = ({ name, category, price, stock = 0, isActive = true }) => {
+// Categorias permitidas para clasificar un producto del inventario.
+export const ALLOWED_CATEGORIES = Object.freeze([
+    'perifericos',
+    'laptops',
+    'componentes',
+    'monitores',
+    'audio',
+    'streaming',
+]);
+
+// Estados permitidos. 'inactive' es el resultado de la eliminacion logica.
+export const ALLOWED_STATUSES = Object.freeze(['available', 'loaned', 'maintenance', 'inactive']);
+
+// Estado asignado a un producto nuevo cuando el usuario no indica uno.
+export const DEFAULT_STATUS = 'available';
+
+// Tags asignados a un producto nuevo cuando el usuario no escribe ninguno.
+export const DEFAULT_TAGS = Object.freeze(['gamer', 'clase']);
+
+// Devuelve el nombre de la coleccion: usa COLLECTION_NAME del entorno o 'products' por defecto.
+export const getCollectionName = () => process.env.COLLECTION_NAME || 'products';
+
+// Construye el documento que se guarda en MongoDB agregando las fechas de creacion y actualizacion.
+export const createProductDocument = ({ name, category, brand, stock, price, status, tags }) => {
     const now = new Date();
-
-    return {
-        name: name ? name.trim() : '',
-        category,
-        price: Number(price),
-        stock: Number(stock),
-        isActive: Boolean(isActive),
-        createdAt: now,
-        updatedAt: now,
-    };
+    return { name, category, brand, stock, price, status, tags, createdAt: now, updatedAt: now };
 };
 
-// Esquema JSON Schema para validacion nativa dentro de MongoDB
-export const productoCollectionSchema = {
+// Esquema JSON de referencia para validacion nativa en MongoDB. No se aplica automaticamente
+// para no afectar colecciones existentes.
+export const productCollectionSchema = {
     $jsonSchema: {
         bsonType: 'object',
-        required: ['name', 'category', 'price', 'stock', 'isActive'],
+        required: ['name', 'category', 'price', 'stock', 'status', 'tags', 'createdAt', 'updatedAt'],
         properties: {
-            name: {
-                bsonType: 'string',
-                description: 'El nombre es obligatorio y debe ser un texto',
-            },
-            category: {
-                enum: ALLOWED_CATEGORIES,
-                description: 'La categoría debe ser una de las opciones permitidas',
-            },
-            price: {
-                bsonType: ['double', 'int', 'decimal'],
-                minimum: 0,
-                description: 'El precio debe ser un número mayor o igual a 0',
-            },
-            stock: {
-                bsonType: ['int', 'long'],
-                minimum: 0,
-                description: 'El stock debe ser un número mayor o igual a 0',
-            },
-            isActive: {
-                bsonType: 'bool',
-                description: 'isActive debe ser un booleano',
-            },
-            createdAt: {
-                bsonType: 'date',
-            },
-            updatedAt: {
-                bsonType: 'date',
-            },
+            name: { bsonType: 'string', minLength: 1 },
+            category: { enum: ALLOWED_CATEGORIES },
+            brand: { bsonType: 'string' },
+            price: { bsonType: ['double', 'int', 'long', 'decimal'], minimum: 0 },
+            stock: { bsonType: ['int', 'long'], minimum: 0 },
+            status: { enum: ALLOWED_STATUSES },
+            tags: { bsonType: 'array', items: { bsonType: 'string' } },
+            createdAt: { bsonType: 'date' },
+            updatedAt: { bsonType: 'date' },
         },
-    }
+    },
 };
